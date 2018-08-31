@@ -130,4 +130,58 @@ $ bin/console cache:clear
        return $this->>render('create-post.html.twig', ['form' => $form->createView()]);
     }
     ```
-10. Now you can load your page and look at the form
+10. Now you can load your page and look at the form, have a play with the `PostType` class to see what you can change
+11. In order to save your `Post` to the database when the form is submitted, you need to use the `EntityManager`, so
+    you inject it into the constructor of your Controller
+    ```php
+    /** @var EntityManagerInterface **/
+    private $entityManager;
+    
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManagerInterface;
+    }
+    ```
+12. Now you can save your `Post` to the database, but only if the form has been submitted and is valid
+    ```php
+    $this->entityManager->persist($post);
+    $this->entityManager->flush();
+    ```
+13. It's best practice to do a redirect after a form is successfully submitted because it prevents the user from 
+    accidentally submitting the form twice
+    ```php
+    return $this->redirect('create');
+    ```
+14. Submit your form a few times, log into the database like we did in the previous task and check our your posts
+
+
+#### Querying the Entity Manager
+
+1. Create a new twig template that iterates through a list of Posts and prints their title
+    ```twig
+    <ul>
+    {% for post in posts %}
+       <li>{{ post.title }}</li>
+    {% endfor %}
+    </ul>
+    ```
+2. Create a new Controller action
+3. Get a list of all the Posts and pass them through to your twig template
+    ```php
+    $posts = $this->entityManager->findAll(Post::class);
+    ```
+4. Load the page, you should see a list of all the Posts in your database
+5. Inject the `Request` into your action and get the `'title'` parameter from it (with a sensible default value of `''`)
+6. Create a `QueryBuilder` in order to search the database for specific Posts
+    ```php
+    $posts = $this->entityManager->createQueryBuilder()
+       ->select('post')
+       ->from(Post:class, 'post')
+       ->where('post.title = :title')
+       ->setParameter('title', $title)
+       ->getQuery()
+       ->getResult()
+    ;
+    ```
+7. Now you can search for Posts by title!
+8. Have a play, try and the QueryBuilder doing a wildcard search with an SQL like
